@@ -17,10 +17,12 @@ uses
   Winapi.Windows,
   System.SysUtils,
   Vcl.Controls,
+  Vcl.Themes,
 {$ELSE}
   Windows,
   SysUtils,
   Controls,
+  Themes,
 {$IFEND}
   StringUnit,
   mCommon in 'mCommon.pas',
@@ -29,7 +31,7 @@ uses
 
 resourcestring
   SName = '”¼Šp/‘SŠp•ÏŠ·';
-  SVersion = '2.0.2';
+  SVersion = '2.0.4';
 
 const
   IDS_MENU_TEXT = 1;
@@ -311,7 +313,8 @@ end;
 
 procedure OnEvents(hwnd: HWND; nEvent: NativeInt; lParam: LPARAM); stdcall;
 begin
-  //
+  if (nEvent and EVENT_CLOSE) <> 0 then
+    ThemeServices.Free;
 end;
 
 function PluginProc(hwnd: HWND; nMsg: NativeInt; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
@@ -343,5 +346,6 @@ exports
   PluginProc;
 
 begin
+  // ReportMemoryLeaksOnShutdown := True;
 
 end.
