@@ -6,15 +6,15 @@ uses
 {$IF CompilerVersion > 22.9}
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls;
+  Vcl.StdCtrls,
 {$ELSE}
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls;
+  Dialogs, StdCtrls,
 {$IFEND}
-
+  mPerMonitorDpi;
 
 type
-  TMainForm = class(TForm)
+  TMainForm = class(TScaledForm)
     KanaLabel: TLabel;
     KanaComboBox: TComboBox;
     AlphaLabel: TLabel;
@@ -31,6 +31,7 @@ type
     OKButton: TButton;
     CancelButton: TButton;
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     { Private éŒ¾ }
   public
@@ -41,8 +42,7 @@ type
 
 var
   MainForm: TMainForm;
-  FFontName: string;
-  FFontSize: NativeInt;
+  FFont: TFont;
 
 implementation
 
@@ -65,13 +65,19 @@ begin
       Name := 'Tahoma';
       Size := 8;
     end;
+  FFont.Assign(Font);
   ReadIni;
   with Font do
   begin
-    ChangeScale(FFontSize, Size);
-    Name := FFontName;
-    Size := FFontSize;
+    ChangeScale(FFont.Size, Size);
+    Name := FFont.Name;
+    Size := FFont.Size;
   end;
+end;
+
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  //
 end;
 
 procedure TMainForm.ReadIni;
@@ -82,8 +88,18 @@ begin
     Exit;
   with TMemIniFile.Create(S, TEncoding.UTF8) do
     try
-      FFontName := ReadString('MainForm', 'FontName', Font.Name);
-      FFontSize := ReadInteger('MainForm', 'FontSize', Font.Size);
+      with FFont do
+        if ValueExists('MainForm', 'FontName') then
+        begin
+          Name := ReadString('MainForm', 'FontName', Name);
+          Size := ReadInteger('MainForm', 'FontSize', Size);
+          Height := MulDiv(Height, 96, Screen.PixelsPerInch);
+        end
+        else if (Win32MajorVersion > 6) or ((Win32MajorVersion = 6) and (Win32MinorVersion >= 2)) then
+        begin
+          Assign(Screen.IconFont);
+          Height := MulDiv(Height, 96, Screen.PixelsPerInch);
+        end;
       KanaComboBox.ItemIndex := ReadInteger('Conversion', 'Kana', KanaComboBox.ItemIndex);
       AlphaComboBox.ItemIndex := ReadInteger('Conversion', 'Alpha', AlphaComboBox.ItemIndex);
       NumComboBox.ItemIndex := ReadInteger('Conversion', 'Num', NumComboBox.ItemIndex);
@@ -116,5 +132,14 @@ begin
     FIniFailed := True;
   end;
 end;
+
+initialization
+
+FFont := TFont.Create;
+
+finalization
+
+if Assigned(FFont) then
+  FreeAndNil(FFont);
 
 end.

@@ -11,34 +11,32 @@ library Conversion;
 {$RTTI EXPLICIT METHODS([]) FIELDS([]) PROPERTIES([])}
 {$WEAKLINKRTTI ON}
 
+{$R 'mPlugin.res' 'mPlugin.rc'}
+
 
 uses
-{$IF CompilerVersion > 22.9}
-  Winapi.Windows,
-  System.SysUtils,
-  Vcl.Controls,
-  Vcl.Themes,
-{$ELSE}
   Windows,
   SysUtils,
   Controls,
   Themes,
-{$IFEND}
   StringUnit,
   mCommon in 'mCommon.pas',
   mMain in 'mMain.pas' {MainForm},
-  mPlugin in 'mPlugin.pas';
+  mPlugin in 'mPlugin.pas',
+  mPerMonitorDpi in 'mPerMonitorDpi.pas';
 
 resourcestring
   SName = '”¼Šp/‘SŠp•ÏŠ·';
-  SVersion = '2.0.4';
+  SVersion = '2.1.0';
 
 const
   IDS_MENU_TEXT = 1;
   IDS_STATUS_MESSAGE = 2;
   IDI_ICON = 101;
 
+{$IFDEF DEBUG}
 {$R *.res}
+{$ENDIF}
 
 
 procedure OnCommand(hwnd: HWND); stdcall;
@@ -346,6 +344,8 @@ exports
   PluginProc;
 
 begin
-  // ReportMemoryLeaksOnShutdown := True;
+{$IFDEF DEBUG}
+  ReportMemoryLeaksOnShutdown := True;
+{$ENDIF}
 
 end.
