@@ -3,7 +3,7 @@
 //
 // Copyright (c) Kuro. All Rights Reserved.
 // e-mail: info@haijin-boys.com
-// www:    http://www.haijin-boys.com/
+// www:    https://www.haijin-boys.com/
 // -----------------------------------------------------------------------------
 
 library Conversion;
@@ -15,10 +15,9 @@ library Conversion;
 
 
 uses
-  Windows,
-  SysUtils,
-  Controls,
-  Themes,
+  Winapi.Windows,
+  System.SysUtils,
+  Vcl.Controls,
   StringUnit,
   mCommon in 'mCommon.pas',
   mMain in 'mMain.pas' {MainForm},
@@ -27,7 +26,7 @@ uses
 
 resourcestring
   SName = '半角/全角変換';
-  SVersion = '2.1.0';
+  SVersion = '2.3.2';
 
 const
   IDS_MENU_TEXT = 1;
@@ -48,6 +47,7 @@ const
     'ﾀﾞ', 'ﾁﾞ', 'ﾂﾞ', 'ﾃﾞ', 'ﾄﾞ',
     'ﾊﾞ', 'ﾋﾞ', 'ﾌﾞ', 'ﾍﾞ', 'ﾎﾞ',
     'ﾊﾟ', 'ﾋﾟ', 'ﾌﾟ', 'ﾍﾟ', 'ﾎﾟ',
+    'ｳﾞ',
     'ｱ', 'ｲ', 'ｳ', 'ｴ', 'ｵ',
     'ｶ', 'ｷ', 'ｸ', 'ｹ', 'ｺ',
     'ｻ', 'ｼ', 'ｽ', 'ｾ', 'ｿ',
@@ -57,7 +57,7 @@ const
     'ﾏ', 'ﾐ', 'ﾑ', 'ﾒ', 'ﾓ',
     'ﾔ', 'ﾕ', 'ﾖ',
     'ﾗ', 'ﾘ', 'ﾙ', 'ﾚ', 'ﾛ',
-    'ﾜ', 'ｦ', 'ﾝ', 'ｳﾞ',
+    'ﾜ', 'ｦ', 'ﾝ',
     'ｧ', 'ｨ', 'ｩ', 'ｪ', 'ｫ',
     'ｬ', 'ｭ', 'ｮ',
     'ｯ', 'ﾞ', 'ﾟ', 'ｰ', '･', '､', '｡', '｢', '｣');
@@ -68,6 +68,7 @@ const
     'ダ', 'ヂ', 'ヅ', 'デ', 'ド',
     'バ', 'ビ', 'ブ', 'ベ', 'ボ',
     'パ', 'ピ', 'プ', 'ペ', 'ポ',
+    'ヴ',
     'ア', 'イ', 'ウ', 'エ', 'オ',
     'カ', 'キ', 'ク', 'ケ', 'コ',
     'サ', 'シ', 'ス', 'セ', 'ソ',
@@ -77,7 +78,7 @@ const
     'マ', 'ミ', 'ム', 'メ', 'モ',
     'ヤ', 'ユ', 'ヨ',
     'ラ', 'リ', 'ル', 'レ', 'ロ',
-    'ワ', 'ヲ', 'ン', 'ヴ',
+    'ワ', 'ヲ', 'ン',
     'ァ', 'ィ', 'ゥ', 'ェ', 'ォ',
     'ャ', 'ュ', 'ョ',
     'ッ', '゛', '゜', 'ー', '・', '、', '。', '「', '」');
@@ -133,11 +134,11 @@ const
     ('　');
 var
   S: string;
-  I, P, Len: NativeInt;
-  Flags: NativeInt;
+  I, J, Len: Integer;
+  Flags: Integer;
   OldPatterns, NewPatterns: array of string;
 begin
-  with TMainForm.CreateParented(hwnd) do
+  with TMainForm.Create(nil, hwnd) do
     try
       Flags := Editor_GetSelType(hwnd);
       SelRadioButton.Enabled := Boolean(Flags) and Boolean(SEL_TYPE_CHAR);
@@ -158,23 +159,23 @@ begin
               ;
             1:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(HalfWidthKana));
                 for I := 0 to High(HalfWidthKana) do
-                  OldPatterns[I + P] := HalfWidthKana[I];
+                  OldPatterns[I + J] := HalfWidthKana[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(FullWidthKana));
                 for I := 0 to High(FullWidthKana) do
-                  NewPatterns[I + P] := FullWidthKana[I];
+                  NewPatterns[I + J] := FullWidthKana[I];
               end;
             2:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(FullWidthKana));
                 for I := 0 to High(FullWidthKana) do
-                  OldPatterns[I + P] := FullWidthKana[I];
+                  OldPatterns[I + J] := FullWidthKana[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(HalfWidthKana));
                 for I := 0 to High(HalfWidthKana) do
-                  NewPatterns[I + P] := HalfWidthKana[I];
+                  NewPatterns[I + J] := HalfWidthKana[I];
               end;
           end;
           case AlphaComboBox.ItemIndex of
@@ -182,23 +183,23 @@ begin
               ;
             1:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(HalfWidthAlpha));
                 for I := 0 to High(HalfWidthAlpha) do
-                  OldPatterns[I + P] := HalfWidthAlpha[I];
+                  OldPatterns[I + J] := HalfWidthAlpha[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(FullWidthAlpha));
                 for I := 0 to High(FullWidthAlpha) do
-                  NewPatterns[I + P] := FullWidthAlpha[I];
+                  NewPatterns[I + J] := FullWidthAlpha[I];
               end;
             2:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(FullWidthAlpha));
                 for I := 0 to High(FullWidthAlpha) do
-                  OldPatterns[I + P] := FullWidthAlpha[I];
+                  OldPatterns[I + J] := FullWidthAlpha[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(HalfWidthAlpha));
                 for I := 0 to High(HalfWidthAlpha) do
-                  NewPatterns[I + P] := HalfWidthAlpha[I];
+                  NewPatterns[I + J] := HalfWidthAlpha[I];
               end;
           end;
           case NumComboBox.ItemIndex of
@@ -206,23 +207,23 @@ begin
               ;
             1:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(HalfWidthNum));
                 for I := 0 to High(HalfWidthNum) do
-                  OldPatterns[I + P] := HalfWidthNum[I];
+                  OldPatterns[I + J] := HalfWidthNum[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(FullWidthNum));
                 for I := 0 to High(FullWidthNum) do
-                  NewPatterns[I + P] := FullWidthNum[I];
+                  NewPatterns[I + J] := FullWidthNum[I];
               end;
             2:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(FullWidthNum));
                 for I := 0 to High(FullWidthNum) do
-                  OldPatterns[I + P] := FullWidthNum[I];
+                  OldPatterns[I + J] := FullWidthNum[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(HalfWidthNum));
                 for I := 0 to High(HalfWidthNum) do
-                  NewPatterns[I + P] := HalfWidthNum[I];
+                  NewPatterns[I + J] := HalfWidthNum[I];
               end;
           end;
           case MarksComboBox.ItemIndex of
@@ -230,23 +231,23 @@ begin
               ;
             1:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(HalfWidthMarks));
                 for I := 0 to High(HalfWidthMarks) do
-                  OldPatterns[I + P] := HalfWidthMarks[I];
+                  OldPatterns[I + J] := HalfWidthMarks[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(FullWidthMarks));
                 for I := 0 to High(FullWidthMarks) do
-                  NewPatterns[I + P] := FullWidthMarks[I];
+                  NewPatterns[I + J] := FullWidthMarks[I];
               end;
             2:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(FullWidthMarks));
                 for I := 0 to High(FullWidthMarks) do
-                  OldPatterns[I + P] := FullWidthMarks[I];
+                  OldPatterns[I + J] := FullWidthMarks[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(HalfWidthMarks));
                 for I := 0 to High(HalfWidthMarks) do
-                  NewPatterns[I + P] := HalfWidthMarks[I];
+                  NewPatterns[I + J] := HalfWidthMarks[I];
               end;
           end;
           case SpacesComboBox.ItemIndex of
@@ -254,23 +255,23 @@ begin
               ;
             1:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(HalfWidthSpaces));
                 for I := 0 to High(HalfWidthSpaces) do
-                  OldPatterns[I + P] := HalfWidthSpaces[I];
+                  OldPatterns[I + J] := HalfWidthSpaces[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(FullWidthSpaces));
                 for I := 0 to High(FullWidthSpaces) do
-                  NewPatterns[I + P] := FullWidthSpaces[I];
+                  NewPatterns[I + J] := FullWidthSpaces[I];
               end;
             2:
               begin
-                P := Length(OldPatterns);
+                J := Length(OldPatterns);
                 SetLength(OldPatterns, Length(OldPatterns) + Length(FullWidthSpaces));
                 for I := 0 to High(FullWidthSpaces) do
-                  OldPatterns[I + P] := FullWidthSpaces[I];
+                  OldPatterns[I + J] := FullWidthSpaces[I];
                 SetLength(NewPatterns, Length(NewPatterns) + Length(HalfWidthSpaces));
                 for I := 0 to High(HalfWidthSpaces) do
-                  NewPatterns[I + P] := HalfWidthSpaces[I];
+                  NewPatterns[I + J] := HalfWidthSpaces[I];
               end;
           end;
           if (Length(OldPatterns) > 0) and (Length(NewPatterns) > 0) then
@@ -294,28 +295,27 @@ begin
   Result := True;
 end;
 
-function GetMenuTextID: NativeInt; stdcall;
+function GetMenuTextID: Cardinal; stdcall;
 begin
   Result := IDS_MENU_TEXT;
 end;
 
-function GetStatusMessageID: NativeInt; stdcall;
+function GetStatusMessageID: Cardinal; stdcall;
 begin
   Result := IDS_STATUS_MESSAGE;
 end;
 
-function GetIconID: NativeInt; stdcall;
+function GetIconID: Cardinal; stdcall;
 begin
   Result := IDI_ICON;
 end;
 
-procedure OnEvents(hwnd: HWND; nEvent: NativeInt; lParam: LPARAM); stdcall;
+procedure OnEvents(hwnd: HWND; nEvent: Cardinal; lParam: LPARAM); stdcall;
 begin
-  if (nEvent and EVENT_CLOSE) <> 0 then
-    ThemeServices.Free;
+  //
 end;
 
-function PluginProc(hwnd: HWND; nMsg: NativeInt; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
+function PluginProc(hwnd: HWND; nMsg: Cardinal; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
 begin
   Result := 0;
   case nMsg of

@@ -12,7 +12,6 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
@@ -134,7 +133,7 @@ object MainForm: TMainForm
       Top = 20
       Width = 105
       Height = 17
-      Caption = #25991#31456#20840#20307'(&A)'
+      Caption = #25991#31456#20840#20307'(&L)'
       Checked = True
       TabOrder = 0
       TabStop = True
@@ -144,7 +143,7 @@ object MainForm: TMainForm
       Top = 40
       Width = 105
       Height = 17
-      Caption = #36984#25246#31684#22258#12398#12415'(&L)'
+      Caption = #36984#25246#31684#22258#12398#12415'(&E)'
       TabOrder = 1
     end
   end

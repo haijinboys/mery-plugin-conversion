@@ -14,7 +14,20 @@ uses
   mPerMonitorDpi;
 
 type
-  TMainForm = class(TScaledForm)
+  TCenterForm = class(TScaledForm)
+  private
+    { Private éŒ¾ }
+    FWndParent: THandle;
+  protected
+    { Protected éŒ¾ }
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure DoShow; override;
+  public
+    { Public éŒ¾ }
+    constructor Create(AOwner: TComponent; AParent: THandle); reintroduce;
+  end;
+
+  TMainForm = class(TCenterForm)
     KanaLabel: TLabel;
     KanaComboBox: TComboBox;
     AlphaLabel: TLabel;
@@ -42,37 +55,75 @@ type
 
 var
   MainForm: TMainForm;
-  FFont: TFont;
 
 implementation
 
 uses
 {$IF CompilerVersion > 22.9}
-  System.IniFiles,
+  System.IniFiles, Winapi.MultiMon,
 {$ELSE}
-  IniFiles,
+  IniFiles, MultiMon,
 {$IFEND}
   mCommon;
 
 {$R *.dfm}
 
+{ TCenterForm }
+
+constructor TCenterForm.Create(AOwner: TComponent; AParent: THandle);
+var
+  AppMon, WinMon: HMONITOR;
+  I, J: Integer;
+  LLeft, LTop: Integer;
+begin
+  FWndParent := AParent;
+  inherited Create(AOwner);
+  AppMon := Screen.MonitorFromWindow(GetParent(Handle), mdNearest).Handle;
+  WinMon := Monitor.Handle;
+  for I := 0 to Screen.MonitorCount - 1 do
+    if Screen.Monitors[I].Handle = AppMon then
+      if AppMon <> WinMon then
+        for J := 0 to Screen.MonitorCount - 1 do
+          if Screen.Monitors[J].Handle = WinMon then
+          begin
+            LLeft := Screen.Monitors[I].Left + Left - Screen.Monitors[J].Left;
+            if LLeft + Width > Screen.Monitors[I].Left + Screen.Monitors[I].Width then
+              LLeft := Screen.Monitors[I].Left + Screen.Monitors[I].Width - Width;
+            LTop := Screen.Monitors[I].Top + Top - Screen.Monitors[J].Top;
+            if LTop + Height > Screen.Monitors[I].Top + Screen.Monitors[I].Height then
+              LTop := Screen.Monitors[I].Top + Screen.Monitors[I].Height - Height;
+            SetBounds(LLeft, LTop, Width, Height);
+          end;
+end;
+
+procedure TCenterForm.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  Params.WndParent := FWndParent;
+end;
+
+procedure TCenterForm.DoShow;
+var
+  H: THandle;
+  R1, R2: TRect;
+begin
+  H := GetParent(Handle);
+  if (H = 0) or IsIconic(H) then
+    H := GetDesktopWindow;
+  if GetWindowRect(H, R1) and GetWindowRect(Handle, R2) then
+    SetWindowPos(Handle, 0,
+      R1.Left + (((R1.Right - R1.Left) - (R2.Right - R2.Left)) div 2),
+      R1.Top + (((R1.Bottom - R1.Top) - (R2.Bottom - R2.Top)) div 2),
+      0, 0, SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE);
+  inherited;
+end;
+
+{ TMainForm }
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  if Win32MajorVersion < 6 then
-    with Font do
-    begin
-      Name := 'Tahoma';
-      Size := 8;
-    end;
-  FFont.Assign(Font);
+  TScaledForm.DefaultFont.Assign(Font);
   ReadIni;
-  with Font do
-  begin
-    ChangeScale(FFont.Size, Size);
-    Name := FFont.Name;
-    Size := FFont.Size;
-  end;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -88,18 +139,14 @@ begin
     Exit;
   with TMemIniFile.Create(S, TEncoding.UTF8) do
     try
-      with FFont do
+      with TScaledForm.DefaultFont do
         if ValueExists('MainForm', 'FontName') then
         begin
           Name := ReadString('MainForm', 'FontName', Name);
           Size := ReadInteger('MainForm', 'FontSize', Size);
-          Height := MulDiv(Height, 96, Screen.PixelsPerInch);
         end
-        else if (Win32MajorVersion > 6) or ((Win32MajorVersion = 6) and (Win32MinorVersion >= 2)) then
-        begin
+        else if CheckWin32Version(6, 2) then
           Assign(Screen.IconFont);
-          Height := MulDiv(Height, 96, Screen.PixelsPerInch);
-        end;
       KanaComboBox.ItemIndex := ReadInteger('Conversion', 'Kana', KanaComboBox.ItemIndex);
       AlphaComboBox.ItemIndex := ReadInteger('Conversion', 'Alpha', AlphaComboBox.ItemIndex);
       NumComboBox.ItemIndex := ReadInteger('Conversion', 'Num', NumComboBox.ItemIndex);
@@ -132,14 +179,5 @@ begin
     FIniFailed := True;
   end;
 end;
-
-initialization
-
-FFont := TFont.Create;
-
-finalization
-
-if Assigned(FFont) then
-  FreeAndNil(FFont);
 
 end.
